@@ -62,6 +62,9 @@ class LogStash::Outputs::Http < LogStash::Outputs::Base
 
   config :message, :validate => :string
 
+   # Ignore list for http response codes
+  config :ignore_codes, :validate => :array, :required => false, :default => []
+
   def register
     @http_method = @http_method.to_sym
 
@@ -118,7 +121,7 @@ class LogStash::Outputs::Http < LogStash::Outputs::Base
     end
 
     request.on_success do |response|
-      if response.code < 200 || response.code > 299
+      if (response.code < 200 || response.code > 299) && !ignore_codes.include? response.code
         log_failure(
           "Encountered non-200 HTTP code #{response.code}",
           :response_code => response.code,
